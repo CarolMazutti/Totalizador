@@ -12,8 +12,8 @@ arquivo = askopenfilename(title="Selecione um arquivo CSV", filetypes=[("CSV fil
 if not arquivo:
     print("Nenhum arquivo selecionado.")
 else:
-    # Lê os dados do arquivo CSV
-    df = pd.read_csv(arquivo)
+    # Lê os dados do arquivo CSV com separador ';' e codificação 'ISO-8859-1', ignorando linhas com erros
+    df = pd.read_csv(arquivo, sep=';', encoding='ISO-8859-1', on_bad_lines='skip')
 
     # Imprime os dados lidos do arquivo
     print("Dados lidos do arquivo:")
@@ -56,11 +56,3 @@ else:
     # Soma os valores da coluna "Entrada"
     soma = resultado['Entrada (Crédito Passível de Apropriação)'].sum()
     print("Soma dos valores da coluna 'Entrada (Crédito Passível de Apropriação)':", soma)
-
-    print("Tipos de dados das colunas:")
-    print(df.dtypes)
-    print("Valores únicos na coluna 'Data':")
-    print(df['Data'].unique())
-    print("Primeiras linhas do DataFrame:")
-    print(df.head())
-    print("Número de linhas válidas após conversão de 'Data':", df['Data'].notna().sum())
