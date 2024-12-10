@@ -1,58 +1,51 @@
-import pandas as pd
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
+import csv
+import tkinter as tk
+from tkinter import filedialog
 
-# Cria uma janela oculta
-Tk().withdraw()
+def ler_arquivo(arquivo):
+    with open(arquivo, 'r') as file:
+        leitor = csv.reader(file, delimiter=';')
+        dados = list(leitor)
+        return dados
 
-# Solicita ao usuário que selecione um arquivo CSV
-arquivo = askopenfilename(title="Selecione um arquivo CSV", filetypes=[("CSV files", "*.csv")])
+def ignorar_cabecalho(dados):
+    for i, linha in enumerate(dados):
+        if len(linha) > 1 and linha[0].isdigit():
+            return dados[i:]
+    return dados
 
-# Verifica se um arquivo foi selecionado
-if not arquivo:
-    print("Nenhum arquivo selecionado.")
-else:
-    # Lê os dados do arquivo CSV com separador ';' e codificação 'ISO-8859-1', ignorando linhas com erros
-    df = pd.read_csv(arquivo, sep=';', encoding='ISO-8859-1', on_bad_lines='skip')
+def perguntar_mes_ano():
+    mes = input("Digite o mês (MM): ")
+    ano = input("Digite o ano (AAAA): ")
+    return mes, ano
 
-    # Imprime os dados lidos do arquivo
-    print("Dados lidos do arquivo:")
-    print(df)
+def totalizar_credito(dados, mes, ano):
+    total = 0
+    for linha in dados:
+        if len(linha) > 4:
+            data = linha[1].split('/')
+            if len(data) == 3:  # Verifica se a data tem 3 partes
+                if data[1] == mes and data[2] == ano:
+                    total += float(linha[4].replace('.', '').replace(',', '.'))
+    return total
 
-    # Imprime as colunas disponíveis
-    print("Colunas disponíveis:", df.columns.tolist())
+def selecionar_arquivo():
+    root = tk.Tk()
+    root.withdraw()  # Oculta a janela principal
+    arquivo = filedialog.askopenfilename(title="Selecione o arquivo CSV", filetypes=[("CSV files", "*.csv")])
+    return arquivo
 
-    # Renomeia as colunas, se necessário
-    df.columns = ['Nº. ou Código', 'Data', 'Nota Fiscal', 'Descrição Resumida', 'Entrada (Crédito Passível de Apropriação)', 'Saída, Baixa ou Perda (Dedução de Crédito)', 'Saldo Acumulado (Base do Crédito a ser Apropriado)']
+def main():
+    arquivo = selecionar_arquivo()
+    if not arquivo:
+        print("Nenhum arquivo selecionado.")
+        return
 
-    # Imprime os tipos de dados das colunas
-    print("Tipos de dados das colunas:")
-    print(df.dtypes)
+    dados = ler_arquivo(arquivo)
+    dados = ignorar_cabecalho(dados)
+    mes, ano = perguntar_mes_ano()
+    total = totalizar_credito(dados, mes, ano)
+    print(f"O total de crédito para o mês {mes}/{ano} é: {total:.2f}")
 
-    # Remove linhas onde a coluna 'Data' é NaN ou não é uma data válida
-    df = df[pd.to_datetime(df['Data'], format='%d/%m/%Y', errors='coerce').notna()]
-
-    # Converte a coluna 'Data' para o formato de data
-    df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y')
-
-    # Converte a coluna 'Entrada (Crédito Passível de Apropriação)' para numérico
-    df['Entrada (Crédito Passível de Apropriação)'] = pd.to_numeric(df['Entrada (Crédito Passível de Apropriação)'], errors='coerce')
-
-    # Imprime os valores da coluna 'Entrada (Crédito Passível de Apropriação)'
-    print("Valores da coluna 'Entrada (Crédito Passível de Apropriação)':")
-    print(df['Entrada (Crédito Passível de Apropriação)'])
-
-    # Solicita o mês e o ano ao usuário
-    mes = int(input("Digite o mês (1-12): "))
-    ano = int(input("Digite o ano (ex: 2021): "))
-
-    # Filtra os dados pelo mês e ano, ignorando os dias
-    resultado = df[(df['Data'].dt.month == mes) & (df['Data'].dt.year == ano)]
-
-    # Imprime o resultado após o filtro
-    print("Resultado após filtro de mês e ano:")
-    print(resultado)
-
-    # Soma os valores da coluna "Entrada"
-    soma = resultado['Entrada (Crédito Passível de Apropriação)'].sum()
-    print("Soma dos valores da coluna 'Entrada (Crédito Passível de Apropriação)':", soma)
+if __name__ == "__main__":
+    main()
