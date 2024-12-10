@@ -1,6 +1,6 @@
 import csv
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, simpledialog, messagebox
 
 def ler_arquivo(arquivo):
     with open(arquivo, 'r') as file:
@@ -15,8 +15,8 @@ def ignorar_cabecalho(dados):
     return dados
 
 def perguntar_mes_ano():
-    mes = input("Digite o mês (MM): ")
-    ano = input("Digite o ano (AAAA): ")
+    mes = simpledialog.askstring("Entrada de Mês", "Digite o mês (MM):")
+    ano = simpledialog.askstring("Entrada de Ano", "Digite o ano (AAAA):")
     return mes, ano
 
 def totalizar_credito(dados, mes, ano):
@@ -36,16 +36,24 @@ def selecionar_arquivo():
     return arquivo
 
 def main():
+    root = tk.Tk()
+    root.withdraw()  # Oculta a janela principal
+
     arquivo = selecionar_arquivo()
     if not arquivo:
-        print("Nenhum arquivo selecionado.")
+        messagebox.showinfo("Informação", "Nenhum arquivo selecionado.")
         return
 
     dados = ler_arquivo(arquivo)
     dados = ignorar_cabecalho(dados)
     mes, ano = perguntar_mes_ano()
+
+    if not mes or not ano:
+        messagebox.showwarning("Aviso", "Mês e ano devem ser preenchidos.")
+        return
+
     total = totalizar_credito(dados, mes, ano)
-    print(f"O total de crédito para o mês {mes}/{ano} é: {total:.2f}")
+    messagebox.showinfo("Resultado", f"O total de crédito para o mês {mes}/{ano} é: {total:.2f}")
 
 if __name__ == "__main__":
     main()
